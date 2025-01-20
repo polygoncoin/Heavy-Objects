@@ -1,16 +1,16 @@
 <?php
-namespace HeavyObject;
+namespace HeavyObjects\Source;
 
-use HeavyObject\DecodeEngine;
+use HeavyObjects\Source\DecodeEngine;
 
 class Decode
 {
     /**
-     * File Handle
+     * Stream
      *
      * @var null|resource
      */
-    private $FileHandle = null;
+    private $Stream = null;
 
     /**
      * Index
@@ -37,21 +37,12 @@ class Decode
     /**
      * Decode constructor
      * 
-     * @param resource $FileHandle
+     * @param resource $Stream
      * @return void
      */
-    public function __construct(&$FileHandle)
+    public function __construct(&$Stream)
     {
-        if (!$FileHandle) {
-            die('Invalid file');
-        }
-        $this->FileHandle = &$FileHandle;
-
-        // File Stats - Check for size
-        $fileStats = fstat($this->FileHandle);
-        if (isset($fileStats['size']) && $fileStats['size'] > $this->MaxFileLength) {
-            die('File size greater than allowed size');
-        }
+        $this->Stream = &$Stream;
     }
 
     /**
@@ -62,20 +53,8 @@ class Decode
     public function init()
     {
         // Init Decode Engine
-        $this->DecodeEngine = new DecodeEngine($this->FileHandle);
-        $this->validate();
+        $this->DecodeEngine = new DecodeEngine();
         $this->indexString();
-    }
-    /**
-     * Validates File
-     * 
-     * @return void
-     */
-    public function validate()
-    {
-        foreach($this->DecodeEngine->process() as $keyArr => $valueArr) {
-            ;
-        }
     }
 
     /**
@@ -95,11 +74,11 @@ class Decode
                 for ($i=0, $iCount = count($keys); $i < $iCount; $i++) {
                     if (is_numeric($keys[$i]) && !isset($FileIndex[$keys[$i]])) {
                         $FileIndex[$keys[$i]] = [];
-                        if (!isset($FileIndex['_c_'])) {
-                            $FileIndex['_c_'] = 0;
+                        if (!isset($FileIndex['_C_'])) {
+                            $FileIndex['_C_'] = 0;
                         }
                         if (is_numeric($keys[$i])) {
-                            $FileIndex['_c_']++;
+                            $FileIndex['_C_']++;
                         }
                     }
                     $FileIndex = &$FileIndex[$keys[$i]];
@@ -156,7 +135,7 @@ class Decode
             (
                 isset($FileIndex['_S_']) &&
                 isset($FileIndex['_E_']) &&
-                isset($FileIndex['_c_'])
+                isset($FileIndex['_C_'])
             )
         ) {
             $return = 'Array';
@@ -186,12 +165,12 @@ class Decode
             !(
                 isset($FileIndex['_S_']) &&
                 isset($FileIndex['_E_']) &&
-                isset($FileIndex['_c_'])
+                isset($FileIndex['_C_'])
             )
         ) {
             return 0;
         }
-        return $FileIndex['_c_'];
+        return $FileIndex['_C_'];
     }
 
     /**

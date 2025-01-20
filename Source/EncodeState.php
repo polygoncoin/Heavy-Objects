@@ -1,7 +1,7 @@
 <?php
-namespace HeavyObject;
+namespace HeavyObjects\Source;
 
-class EncodeObject
+class EncodeState
 {
     public $Mode = '';
     public $Comma = '';

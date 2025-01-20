@@ -1,30 +1,30 @@
 <?php
-namespace HeavyObject;
+namespace HeavyObjects\Source;
 
-use HeavyObject\DecodeObject;
+use HeavyObjects\Source\DecodeState;
 
-class DecodeEngine
+class Engine
 {
     /**
-     * Private File Handle
+     * Stream
      *
      * @var null|resource
      */
-    private $FileHandle = null;
+    private $Stream = null;
 
     /**
-     * Private Array of DecodeObject
+     * Private Array of DecodeState
      *
-     * @var DecodeObject[]
+     * @var DecodeState[]
      */
-    private $DecodeObject = [];
+    private $DecodeState = [];
 
     /**
-     * Private Current DecodeObject
+     * Private Current DecodeState
      *
-     * @var null|DecodeObject
+     * @var null|DecodeState
      */
-    private $CurrentDecodeObject = null;
+    private $CurrentDecodeState = null;
 
     /**
      * Private Characters to be escaped
@@ -64,11 +64,12 @@ class DecodeEngine
     /**
      * Decode constructor
      * 
+     * @param resource $Stream
      * @return void
      */
-    public function __construct(&$FileHandle)
+    public function __construct(&$Stream)
     {
-        $this->FileHandle = &$FileHandle;
+        $this->Stream = &$Stream;
     }
 
     /**
@@ -96,11 +97,11 @@ class DecodeEngine
         $prevIsEscape = false;
 
         $this->CharCounter = $this->_S_ !== null ? $this->_S_ : 0;
-        fseek($this->FileHandle, $this->CharCounter, SEEK_SET);
+        fseek($this->Stream, $this->CharCounter, SEEK_SET);
         
         for(;
             (
-                ($char = fgetc($this->FileHandle)) !== false && 
+                ($char = fgetc($this->Stream)) !== false && 
                 (
                     ($this->_E_ === null) ||
                     ($this->_E_ !== null && $this->CharCounter <= $this->_E_)
@@ -124,7 +125,7 @@ class DecodeEngine
 
                         // Start or End of Array
                         case in_array($char, ['[',']','{','}']):
-                            $arr = $this->handleOpenClose($char, $keyValue, $nullStr, $index);
+                            $arr = $this->handleDecodeOpenClose($char, $keyValue, $nullStr, $index);
                             if ($arr !== false) {
                                 yield $arr['key'] => $arr['value'];
                             }
@@ -135,13 +136,13 @@ class DecodeEngine
                         // Check for null values
                         case $char === ',' && !is_null($nullStr):
                             $nullStr = $this->checkNullStr($nullStr);
-                            switch ($this->CurrentDecodeObject->Mode) {
+                            switch ($this->CurrentDecodeState->Mode) {
                                 case 'Array':
-                                    $this->CurrentDecodeObject->ArrayValues[] = $nullStr;
+                                    $this->CurrentDecodeState->ArrayValues[] = $nullStr;
                                     break;
-                                case 'Assoc':
+                                case 'Object':
                                     if (!empty($keyValue)) {
-                                        $this->CurrentDecodeObject->AssocValues[$keyValue] = $nullStr;
+                                        $this->CurrentDecodeState->ObjectValues[$keyValue] = $nullStr;
                                     }
                                     break;
                             }
@@ -194,7 +195,7 @@ class DecodeEngine
                                 
                                 // Closing qoute of Value
                                 case $varMode === 'valueValue':
-                                    $this->CurrentDecodeObject->AssocValues[$keyValue] = $valueValue;
+                                    $this->CurrentDecodeState->ObjectValues[$keyValue] = $valueValue;
                                     $keyValue = $valueValue = '';
                                     $varMode = 'keyValue';
                                     break;
@@ -208,8 +209,8 @@ class DecodeEngine
                     break;
             }
         }
-        $this->DecodeObject = [];
-        $this->CurrentDecodeObject = null;
+        $this->DecodeState = [];
+        $this->CurrentDecodeState = null;
     }
 
     /**
@@ -223,7 +224,7 @@ class DecodeEngine
         $offset = $this->_S_ !== null ? $this->_S_ : 0;
         $length = $this->_E_ - $offset + 1;
 
-        return stream_get_contents($this->FileHandle, $length, $offset);
+        return stream_get_contents($this->Stream, $length, $offset);
     }
 
     /**
@@ -235,7 +236,7 @@ class DecodeEngine
      * @param boolean   $index    Index output
      * @return array
      */
-    private function handleOpenClose($char, $keyValue, $nullStr, $index)
+    private function handleDecodeOpenClose($char, $keyValue, $nullStr, $index)
     {
         $arr = false;
         switch ($char) {
@@ -243,73 +244,73 @@ class DecodeEngine
                 if (!$index) {
                     $arr = [
                         'key' => $this->getKeys(),
-                        'value' => $this->getObjectValues()
+                        'value' => $this->getObjectDecodeValues()
                     ];
                 }
                 $this->increment();
-                $this->startArray($keyValue);
+                $this->startOfArray($keyValue);
                 break;
             case '{':
                 if (!$index) {
                     $arr = [
                         'key' => $this->getKeys(),
-                        'value' => $this->getObjectValues()
+                        'value' => $this->getObjectDecodeValues()
                     ];
                 }
                 $this->increment();
-                $this->startObject($keyValue);
+                $this->startOfObject($keyValue);
                 break;
             case ']':
                 if (!empty($keyValue)) {
-                    $this->CurrentDecodeObject->ArrayValues[] = $keyValue;
-                    if (is_null($this->CurrentDecodeObject->ArrayKey)) {
-                        $this->CurrentDecodeObject->ArrayKey = 0;
+                    $this->CurrentDecodeState->ArrayValues[] = $keyValue;
+                    if (is_null($this->CurrentDecodeState->ArrayKey)) {
+                        $this->CurrentDecodeState->ArrayKey = 0;
                     } else {
-                        $this->CurrentDecodeObject->ArrayKey++;
+                        $this->CurrentDecodeState->ArrayKey++;
                     }
                 }
                 if ($index) {
                     $arr = [
                         'key' => $this->getKeys(),
                         'value' => [
-                            '_S_' => $this->CurrentDecodeObject->_S_,
+                            '_S_' => $this->CurrentDecodeState->_S_,
                             '_E_' => $this->CharCounter
                         ]
                     ];
                 } else {
-                    if (!empty($this->CurrentDecodeObject->ArrayValues)) {
+                    if (!empty($this->CurrentDecodeState->ArrayValues)) {
                         $arr = [
                             'key' => $this->getKeys(),
-                            'value' => $this->CurrentDecodeObject->ArrayValues
+                            'value' => $this->CurrentDecodeState->ArrayValues
                         ];    
                     }
                 }
-                $this->CurrentDecodeObject = null;
-                $this->popPreviousObject();
+                $this->CurrentDecodeState = null;
+                $this->setPreviousDecodeState();
                 break;
             case '}':
                 if (!empty($keyValue) && !empty($nullStr)) {
                     $nullStr = $this->checkNullStr($nullStr);
-                    $this->CurrentDecodeObject->AssocValues[$keyValue] = $nullStr;
+                    $this->CurrentDecodeState->ObjectValues[$keyValue] = $nullStr;
                 }
                 if ($index) {
                     $arr = [
                         'key' => $this->getKeys(),
                         'value' => [
-                            '_S_' => $this->CurrentDecodeObject->_S_,
+                            '_S_' => $this->CurrentDecodeState->_S_,
                             '_E_' => $this->CharCounter
                         ]
                     ];
                 } else {
-                    if (!empty($this->CurrentDecodeObject->AssocValues)) {
+                    if (!empty($this->CurrentDecodeState->ObjectValues)) {
                         $arr = [
                             'key' => $this->getKeys(),
-                            'value' => $this->CurrentDecodeObject->AssocValues
+                            'value' => $this->CurrentDecodeState->ObjectValues
                         ];    
                     }
                 }
-                $this->CurrentDecodeObject = null;
-                $this->popPreviousObject();
+                $this->CurrentDecodeState = null;
+                $this->setPreviousDecodeState();
                 break;
         }
         if (
@@ -347,27 +348,27 @@ class DecodeEngine
     /**
      * Start of array
      *
-     * @param null|string $key Used while creating simple array inside an objectiative array and $key is the key
+     * @param null|string $key Used while creating simple array inside an associative array and $key is the key
      * @return void
      */
-    private function startArray($key = null)
+    private function startOfArray($key = null)
     {
-        $this->pushCurrentDecodeObject($key);
-        $this->CurrentDecodeObject = new DecodeObject('Array', $key);
-        $this->CurrentDecodeObject->_S_ = $this->CharCounter;
+        $this->pushCurrentDecodeState($key);
+        $this->CurrentDecodeState = new DecodeState('Array', $key);
+        $this->CurrentDecodeState->_S_ = $this->CharCounter;
     }
 
     /**
      * Start of object
      *
-     * @param null|string $key Used while creating objectiative array inside an objectiative array and $key is the key
+     * @param null|string $key Used while creating associative array inside an associative array and $key is the key
      * @return void-
      */
-    private function startObject($key = null)
+    private function startOfObject($key = null)
     {
-        $this->pushCurrentDecodeObject($key);
-        $this->CurrentDecodeObject = new DecodeObject('Assoc', $key);
-        $this->CurrentDecodeObject->_S_ = $this->CharCounter;
+        $this->pushCurrentDecodeState($key);
+        $this->CurrentDecodeState = new DecodeState('Object', $key);
+        $this->CurrentDecodeState->_S_ = $this->CharCounter;
     }
 
     /**
@@ -375,16 +376,16 @@ class DecodeEngine
      *
      * @return void
      */
-    private function pushCurrentDecodeObject($key)
+    private function pushCurrentDecodeState($key)
     {
-        if ($this->CurrentDecodeObject) {
-            if ($this->CurrentDecodeObject->Mode === 'Assoc' && (is_null($key) || empty(trim($key)))) {
+        if ($this->CurrentDecodeState) {
+            if ($this->CurrentDecodeState->Mode === 'Object' && (is_null($key) || empty(trim($key)))) {
                 $this->isBadString($key);
             }
-            if ($this->CurrentDecodeObject->Mode === 'Array' && (is_null($key) || empty(trim($key)))) {
+            if ($this->CurrentDecodeState->Mode === 'Array' && (is_null($key) || empty(trim($key)))) {
                 $this->isBadString($key);
             }
-            array_push($this->DecodeObject, $this->CurrentDecodeObject);
+            array_push($this->DecodeState, $this->CurrentDecodeState);
         }
     }
 
@@ -393,12 +394,12 @@ class DecodeEngine
      *
      * @return void
      */
-    private function popPreviousObject()
+    private function setPreviousDecodeState()
     {
-        if (count($this->DecodeObject) > 0) {
-            $this->CurrentDecodeObject = array_pop($this->DecodeObject);
+        if (count($this->DecodeState) > 0) {
+            $this->CurrentDecodeState = array_pop($this->DecodeState);
         } else {
-            $this->CurrentDecodeObject = null;
+            $this->CurrentDecodeState = null;
         }
     }
 
@@ -410,13 +411,13 @@ class DecodeEngine
     private function increment()
     {
         if (
-            !is_null($this->CurrentDecodeObject) &&
-            $this->CurrentDecodeObject->Mode === 'Array'
+            !is_null($this->CurrentDecodeState) &&
+            $this->CurrentDecodeState->Mode === 'Array'
         ) {
-            if (is_null($this->CurrentDecodeObject->ArrayKey)) {
-                $this->CurrentDecodeObject->ArrayKey = 0;
+            if (is_null($this->CurrentDecodeState->ArrayKey)) {
+                $this->CurrentDecodeState->ArrayKey = 0;
             } else {
-                $this->CurrentDecodeObject->ArrayKey++;
+                $this->CurrentDecodeState->ArrayKey++;
             }
         }
     }
@@ -426,16 +427,16 @@ class DecodeEngine
      *
      * @return array
      */
-    private function getObjectValues()
+    private function getObjectDecodeValues()
     {
         $arr = false;
         if (
-            !is_null($this->CurrentDecodeObject) && 
-            $this->CurrentDecodeObject->Mode === 'Assoc' && 
-            count($this->CurrentDecodeObject->AssocValues) > 0
+            !is_null($this->CurrentDecodeState) && 
+            $this->CurrentDecodeState->Mode === 'Object' && 
+            count($this->CurrentDecodeState->ObjectValues) > 0
         ) {
-            $arr = $this->CurrentDecodeObject->AssocValues;
-            $this->CurrentDecodeObject->AssocValues = [];
+            $arr = $this->CurrentDecodeState->ObjectValues;
+            $this->CurrentDecodeState->ObjectValues = [];
         }
         return $arr;
     }
@@ -463,36 +464,36 @@ class DecodeEngine
     {
         $keys = [];
         $return = &$keys;
-        $objCount = count($this->DecodeObject);
+        $objCount = count($this->DecodeState);
         if ($objCount > 0) {
             for ($i=0; $i<$objCount; $i++) {
-                switch ($this->DecodeObject[$i]->Mode) {
-                    case 'Assoc':
-                        if (!is_null($this->DecodeObject[$i]->AssocKey)) {
-                            $keys[] = $this->DecodeObject[$i]->AssocKey;
+                switch ($this->DecodeState[$i]->Mode) {
+                    case 'Object':
+                        if (!is_null($this->DecodeState[$i]->ObjectKey)) {
+                            $keys[] = $this->DecodeState[$i]->ObjectKey;
                         }
                         break;
                     case 'Array':
-                        if (!is_null($this->DecodeObject[$i]->AssocKey)) {
-                            $keys[] = $this->DecodeObject[$i]->AssocKey;
+                        if (!is_null($this->DecodeState[$i]->ObjectKey)) {
+                            $keys[] = $this->DecodeState[$i]->ObjectKey;
                         }
-                        if (!is_null($this->DecodeObject[$i]->ArrayKey)) {
-                            $keys[] = $this->DecodeObject[$i]->ArrayKey;
+                        if (!is_null($this->DecodeState[$i]->ArrayKey)) {
+                            $keys[] = $this->DecodeState[$i]->ArrayKey;
                         }
                         break;
                 }
             }
         }
-        if ($this->CurrentDecodeObject) {
-            switch ($this->CurrentDecodeObject->Mode) {
-                case 'Assoc':
-                    if (!is_null($this->CurrentDecodeObject->AssocKey)) {
-                        $keys[] = $this->CurrentDecodeObject->AssocKey;
+        if ($this->CurrentDecodeState) {
+            switch ($this->CurrentDecodeState->Mode) {
+                case 'Object':
+                    if (!is_null($this->CurrentDecodeState->ObjectKey)) {
+                        $keys[] = $this->CurrentDecodeState->ObjectKey;
                     }
                     break;
                 case 'Array':
-                    if (!is_null($this->CurrentDecodeObject->AssocKey)) {
-                        $keys[] = $this->CurrentDecodeObject->AssocKey;
+                    if (!is_null($this->CurrentDecodeState->ObjectKey)) {
+                        $keys[] = $this->CurrentDecodeState->ObjectKey;
                     }
                     break;
             }
@@ -501,49 +502,49 @@ class DecodeEngine
     }
 
     /**
-     * Generated Assoc Array
+     * Generated Object Array
      * 
      * @return array
      */
-    private function getAssocKeys()
+    private function getObjectKeys()
     {
         $keys = [];
         $return = &$keys;
-        $objCount = count($this->DecodeObject);
+        $objCount = count($this->DecodeState);
         if ($objCount > 0) {
             for ($i=0; $i<$objCount; $i++) {
-                switch ($this->DecodeObject[$i]->Mode) {
-                    case 'Assoc':
-                        if (!is_null($this->DecodeObject[$i]->AssocKey)) {
-                            $keys[$this->DecodeObject[$i]->AssocKey] = [];
-                            $keys = &$keys[$this->DecodeObject[$i]->AssocKey];
+                switch ($this->DecodeState[$i]->Mode) {
+                    case 'Object':
+                        if (!is_null($this->DecodeState[$i]->ObjectKey)) {
+                            $keys[$this->DecodeState[$i]->ObjectKey] = [];
+                            $keys = &$keys[$this->DecodeState[$i]->ObjectKey];
                         }
                         break;
                     case 'Array':
-                        if (!is_null($this->DecodeObject[$i]->AssocKey)) {
-                            $keys[$this->DecodeObject[$i]->AssocKey] = [];
-                            $keys = &$keys[$this->DecodeObject[$i]->AssocKey];
+                        if (!is_null($this->DecodeState[$i]->ObjectKey)) {
+                            $keys[$this->DecodeState[$i]->ObjectKey] = [];
+                            $keys = &$keys[$this->DecodeState[$i]->ObjectKey];
                         }
-                        if (!is_null($this->DecodeObject[$i]->ArrayKey)) {
-                            $keys[$this->DecodeObject[$i]->ArrayKey] = [];
-                            $keys = &$keys[$this->DecodeObject[$i]->ArrayKey];
+                        if (!is_null($this->DecodeState[$i]->ArrayKey)) {
+                            $keys[$this->DecodeState[$i]->ArrayKey] = [];
+                            $keys = &$keys[$this->DecodeState[$i]->ArrayKey];
                         }
                         break;
                 }
             }
         }
-        if ($this->CurrentDecodeObject) {
-            switch ($this->CurrentDecodeObject->Mode) {
-                case 'Assoc':
-                    if (!is_null($this->CurrentDecodeObject->AssocKey)) {
-                        $keys[$this->CurrentDecodeObject->AssocKey] = [];
-                        $keys = &$keys[$this->CurrentDecodeObject->AssocKey];
+        if ($this->CurrentDecodeState) {
+            switch ($this->CurrentDecodeState->Mode) {
+                case 'Object':
+                    if (!is_null($this->CurrentDecodeState->ObjectKey)) {
+                        $keys[$this->CurrentDecodeState->ObjectKey] = [];
+                        $keys = &$keys[$this->CurrentDecodeState->ObjectKey];
                     }
                     break;
                 case 'Array':
-                    if (!is_null($this->CurrentDecodeObject->AssocKey)) {
-                        $keys[$this->CurrentDecodeObject->AssocKey] = [];
-                        $keys = &$keys[$this->CurrentDecodeObject->AssocKey];
+                    if (!is_null($this->CurrentDecodeState->ObjectKey)) {
+                        $keys[$this->CurrentDecodeState->ObjectKey] = [];
+                        $keys = &$keys[$this->CurrentDecodeState->ObjectKey];
                     }
                     break;
             }

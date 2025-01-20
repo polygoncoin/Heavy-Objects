@@ -1,7 +1,7 @@
 <?php
-namespace HeavyObject;
+namespace HeavyObjects\Source;
 
-class DecodeObject
+class DecodeState
 {
     /**
      * Start position
@@ -18,18 +18,18 @@ class DecodeObject
     public $_E_ = null;
     
     /**
-     * Assoc / Array
+     * Object / Array
      *
      * @var string
      */
     public $Mode = '';
 
     /**
-     * Assoc key for parant object
+     * Object key for parant object
      *
      * @var null|string
      */
-    public $AssocKey = null;
+    public $ObjectKey = null;
     
     /**
      * Array key for parant object
@@ -43,14 +43,13 @@ class DecodeObject
      *
      * @var array
      */
-    public $AssocValues = [];
+    public $ObjectValues = [];
 
     /**
      * Array Values
      *
      * @var string[]
      */
-    */
     public $ArrayValues = [];
 
     /**
@@ -58,11 +57,11 @@ class DecodeObject
      *
      * @param string $mode Values can be one among Array
      */
-    public function __construct($mode, $assocKey = null)
+    public function __construct($mode, $objectKey = null)
     {
         $this->Mode = $mode;
 
-        $assocKey = !is_null($assocKey) ? trim($assocKey) : $assocKey;
-        $this->AssocKey = !empty($assocKey) ? $assocKey : null;
+        $objectKey = !is_null($objectKey) ? trim($objectKey) : $objectKey;
+        $this->ObjectKey = !empty($objectKey) ? $objectKey : null;
     }
 }

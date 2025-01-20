@@ -1,37 +1,54 @@
 <?php
-namespace HeavyObject;
+namespace HeavyObjects\Source;
 
-use HeavyObject\EncodeObject;
+use HeavyObjects\Source\EncodeState;
 
-class Encode
+class EncodeEngine
 {
     /**
-     * Temporary Stream
+     * Stream
      *
-     * @var string
+     * @var null|resource
      */
-    private $TempStream = '';
+    private $Stream = null;
 
     /**
-     * Private Current EncodeObject
+     * Private Current EncodeState
      *
-     * @var EncodeObject[]
+     * @var EncodeState[]
      */
-    private $EncodeObject = [];
+    private $EncodeState = [];
 
     /**
-     * Private Current EncodeObject
+     * Private Current EncodeState
      *
-     * @var null|EncodeObject
+     * @var null|EncodeState
      */
-    private $CurrentEncodeObject = null;
+    private $CurrentEncodeState = null;
+
+    /**
+     * Private Characters to be escaped
+     *
+     * @var string[]
+     */
+    private $Escape = array("\\", "/", "\"", "\n", "\r", "\t", "\x08", "\x0c", ' ');
+
+    /**
+     * Private Characters that are escaped
+     *
+     * @var string[]
+     */
+    private $Replace = array("\\\\", "\\/", "\\\"", "\\n", "\\r", "\\t", "\\f", "\\b", ' ');
 
     /**
      * Encode constructor
+     *
+     * @param resource $Stream
+     * @return void
      */
-    public function __construct()
+    public function __construct(&$Stream)
     {
-        $this->TempStream = fopen("php://temp", "w+b");
+        $this->Stream = &$Stream;
     }
 
     /**
@@ -41,7 +58,7 @@ class Encode
      */
     public function write($str)
     {
-        fwrite($this->TempStream, $str);
+        fwrite($this->Stream, $str);
     }
 
     /**
@@ -53,9 +70,7 @@ class Encode
     private function escape($str)
     {
         if (is_null($str)) return 'null';
-        $escapers = array("\\", "/", "\"", "\n", "\r", "\t", "\x08", "\x0c");
-        $replacements = array("\\\\", "\\/", "\\\"", "\\n", "\\r", "\\t", "\\f", "\\b");
-        $str = str_replace($escapers, $replacements, $str);
+        $str = str_replace($this->Escape, $this->Replace, $str);
         return '"' . $str . '"';
     }
 
@@ -67,16 +82,16 @@ class Encode
      */
     public function encode($arr)
     {
-        if ($this->CurrentEncodeObject) {
-            $this->write($this->CurrentEncodeObject->Comma);
+        if ($this->CurrentEncodeState) {
+            $this->write($this->CurrentEncodeState->Comma);
         }
         if (is_array($arr)) {
             $this->write(json_encode($arr));
         } else {
             $this->write($this->escape($arr));
         }
-        if ($this->CurrentEncodeObject) {
-            $this->CurrentEncodeObject->Comma = ',';
+        if ($this->CurrentEncodeState) {
+            $this->CurrentEncodeState->Comma = ',';
         }
     }
 
@@ -88,7 +103,7 @@ class Encode
      */
     public function addValue($value)
     {
-        if ($this->CurrentEncodeObject->Mode !== 'Array') {
+        if ($this->CurrentEncodeState->Mode !== 'Array') {
             throw new Exception('Mode should be Array');
         }
         $this->encode($value);
@@ -103,12 +118,12 @@ class Encode
      */
     public function addKeyValue($key, $value)
     {
-        if ($this->CurrentEncodeObject->Mode !== 'Object') {
+        if ($this->CurrentEncodeState->Mode !== 'Object') {
             throw new Exception('Mode should be Object');
         }
-        $this->write($this->CurrentEncodeObject->Comma);
+        $this->write($this->CurrentEncodeState->Comma);
         $this->write($this->escape($key) . ':');
-        $this->CurrentEncodeObject->Comma = '';
+        $this->CurrentEncodeState->Comma = '';
         $this->encode($value);
     }
 
@@ -120,11 +135,11 @@ class Encode
      */
     public function startArray($key = null)
     {
-        if ($this->CurrentEncodeObject) {
-            $this->write($this->CurrentEncodeObject->Comma);
-            array_push($this->EncodeObject, $this->CurrentEncodeObject);
+        if ($this->CurrentEncodeState) {
+            $this->write($this->CurrentEncodeState->Comma);
+            array_push($this->EncodeState, $this->CurrentEncodeState);
         }
-        $this->CurrentEncodeObject = new EncodeObject('Array');
+        $this->CurrentEncodeState = new EncodeState('Array');
         if (!is_null($key)) {
             $this->write($this->escape($key) . ':');
         }
@@ -139,10 +154,10 @@ class Encode
     public function endArray()
     {
         $this->write(']');
-        $this->CurrentEncodeObject = null;
-        if (count($this->EncodeObject)>0) {
-            $this->CurrentEncodeObject = array_pop($this->EncodeObject);
-            $this->CurrentEncodeObject->Comma = ',';
+        $this->CurrentEncodeState = null;
+        if (count($this->EncodeState)>0) {
+            $this->CurrentEncodeState = array_pop($this->EncodeState);
+            $this->CurrentEncodeState->Comma = ',';
         }
     }
 
@@ -154,14 +169,14 @@ class Encode
      */
     public function startObject($key = null)
     {
-        if ($this->CurrentEncodeObject) {
-            if ($this->CurrentEncodeObject->Mode === 'Object' && is_null($key)) {
+        if ($this->CurrentEncodeState) {
+            if ($this->CurrentEncodeState->Mode === 'Object' && is_null($key)) {
                 throw new Exception('Object inside an Object should be supported with a Key');
             }
-            $this->write($this->CurrentEncodeObject->Comma);
-            array_push($this->EncodeObject, $this->CurrentEncodeObject);
+            $this->write($this->CurrentEncodeState->Comma);
+            array_push($this->EncodeState, $this->CurrentEncodeState);
         }
-        $this->CurrentEncodeObject = new EncodeObject('Object');
+        $this->CurrentEncodeState = new EncodeState('Object');
         if (!is_null($key)) {
             $this->write($this->escape($key) . ':');
         }
@@ -176,10 +191,10 @@ class Encode
     public function endObject()
     {
         $this->write('}');
-        $this->CurrentEncodeObject = null;
-        if (count($this->EncodeObject)>0) {
-            $this->CurrentEncodeObject = array_pop($this->EncodeObject);
-            $this->CurrentEncodeObject->Comma = ',';
+        $this->CurrentEncodeState = null;
+        if (count($this->EncodeState)>0) {
+            $this->CurrentEncodeState = array_pop($this->EncodeState);
+            $this->CurrentEncodeState->Comma = ',';
         }
     }
 
@@ -190,8 +205,8 @@ class Encode
      */
     public function end()
     {
-        while ($this->CurrentEncodeObject && $this->CurrentEncodeObject->Mode) {
-            switch ($this->CurrentEncodeObject->Mode) {
+        while ($this->CurrentEncodeState && $this->CurrentEncodeState->Mode) {
+            switch ($this->CurrentEncodeState->Mode) {
                 case 'Array':
                     $this->endArray();
                     break;
