@@ -1,8 +1,4 @@
 <?php
-namespace HeavyObjects;
-
-use HeavyObjects\HeavyObjects;
-
 /**
  * Class to autoload class files
  *
@@ -17,9 +13,8 @@ class Autoload
 {
     static public function register($className)
     {
-        $className = substr($className, strlen(__NAMESPACE__));
         $className = str_replace("\\", DIRECTORY_SEPARATOR, $className);
-        $file = __DIR__ . $className . '.php';
+        $file = __DIR__ . DIRECTORY_SEPARATOR . $className . '.php';
         if (!file_exists($file)) {
             echo PHP_EOL . "File '{$file}' missing" . PHP_EOL;
         }
@@ -27,4 +22,4 @@ class Autoload
     }
 }
 
-spl_autoload_register(__NAMESPACE__ . '\Autoload::register');
+spl_autoload_register('\Autoload::register');
