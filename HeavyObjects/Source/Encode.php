@@ -28,7 +28,7 @@ class Encode
 
     /**
      * Decode constructor
-     * 
+     *
      * @param resource $Stream
      * @return void
      */

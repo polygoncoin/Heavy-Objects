@@ -36,7 +36,7 @@ class Decode
 
     /**
      * Decode constructor
-     * 
+     *
      * @param resource $Stream
      * @return void
      */
@@ -128,7 +128,7 @@ class Decode
                 } else {
                     die("Invalid key {$key}");
                 }
-            }    
+            }
         }
         $return = 'Object';
         if (
@@ -159,7 +159,7 @@ class Decode
                 } else {
                     die("Invalid key {$key}");
                 }
-            }    
+            }
         }
         if (
             !(
@@ -229,7 +229,7 @@ class Decode
                 } else {
                     die("Invalid key {$key}");
                 }
-            }    
+            }
         }
         if (
             isset($FileIndex['_S_']) &&

@@ -63,7 +63,7 @@ class Engine
 
     /**
      * Decode constructor
-     * 
+     *
      * @param resource $Stream
      * @return void
      */
@@ -98,10 +98,10 @@ class Engine
 
         $this->CharCounter = $this->_S_ !== null ? $this->_S_ : 0;
         fseek($this->Stream, $this->CharCounter, SEEK_SET);
-        
+
         for(;
             (
-                ($char = fgetc($this->Stream)) !== false && 
+                ($char = fgetc($this->Stream)) !== false &&
                 (
                     ($this->_E_ === null) ||
                     ($this->_E_ !== null && $this->CharCounter <= $this->_E_)
@@ -132,7 +132,7 @@ class Engine
                             $keyValue = $valueValue = '';
                             $varMode = 'keyValue';
                             break;
-                    
+
                         // Check for null values
                         case $char === ',' && !is_null($nullStr):
                             $nullStr = $this->checkNullStr($nullStr);
@@ -161,7 +161,7 @@ class Engine
                             break;
                     }
                     break;
-            
+
                 case $quote === true:
                     switch (true) {
                         // Collect string to be escaped
@@ -192,7 +192,7 @@ class Engine
                                 case $varMode === 'keyValue':
                                     $varMode = 'valueValue';
                                     break;
-                                
+
                                 // Closing qoute of Value
                                 case $varMode === 'valueValue':
                                     $this->CurrentDecodeState->ObjectValues[$keyValue] = $valueValue;
@@ -282,7 +282,7 @@ class Engine
                         $arr = [
                             'key' => $this->getKeys(),
                             'value' => $this->CurrentDecodeState->ArrayValues
-                        ];    
+                        ];
                     }
                 }
                 $this->CurrentDecodeState = null;
@@ -306,7 +306,7 @@ class Engine
                         $arr = [
                             'key' => $this->getKeys(),
                             'value' => $this->CurrentDecodeState->ObjectValues
-                        ];    
+                        ];
                     }
                 }
                 $this->CurrentDecodeState = null;
@@ -314,10 +314,10 @@ class Engine
                 break;
         }
         if (
-            $arr !== false && 
+            $arr !== false &&
             !empty($arr) &&
-            isset($arr['value']) && 
-            $arr['value'] !== false && 
+            isset($arr['value']) &&
+            $arr['value'] !== false &&
             count($arr['value']) > 0
         ) {
             return $arr;
@@ -431,8 +431,8 @@ class Engine
     {
         $arr = false;
         if (
-            !is_null($this->CurrentDecodeState) && 
-            $this->CurrentDecodeState->Mode === 'Object' && 
+            !is_null($this->CurrentDecodeState) &&
+            $this->CurrentDecodeState->Mode === 'Object' &&
             count($this->CurrentDecodeState->ObjectValues) > 0
         ) {
             $arr = $this->CurrentDecodeState->ObjectValues;
@@ -443,7 +443,7 @@ class Engine
 
     /**
      * Check for a valid string(JSON)
-     * 
+     *
      * @return void
      */
     private function isBadString($str)
@@ -456,7 +456,7 @@ class Engine
 
     /**
      * Generated Array
-     * 
+     *
      * @param boolean $index true for normal array / false for associative array
      * @return array
      */
@@ -503,7 +503,7 @@ class Engine
 
     /**
      * Generated Object Array
-     * 
+     *
      * @return array
      */
     private function getObjectKeys()

@@ -53,7 +53,7 @@ class EncodeEngine
 
     /**
      * Write to temporary stream
-     * 
+     *
      * @return void
      */
     public function write($str)
@@ -77,7 +77,7 @@ class EncodeEngine
     /**
      * Encodes both simple and associative array
      *
-     * @param $arr string value escaped and array value json_encode function is applied.  
+     * @param $arr string value escaped and array value json_encode function is applied.
      * @return void
      */
     public function encode($arr)
@@ -217,11 +217,11 @@ class EncodeEngine
         }
     }
 
-    /** 
-     * destruct functipn 
-     */ 
-    public function __destruct() 
-    { 
+    /**
+     * destruct functipn
+     */
+    public function __destruct()
+    {
         $this->end();
     }
 }

@@ -22,21 +22,21 @@ class HeavyObject
 
     /**
      * Private Decode
-     * 
+     *
      * @var null|Decode
      */
     private $Decode = null;
 
     /**
      * Private Encode.
-     * 
+     *
      * @var null|Encode
      */
     private $Encode = null;
 
     /**
      * Decode constructor
-     * 
+     *
      * @return void
      */
     public function __construct()

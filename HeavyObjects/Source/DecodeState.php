@@ -16,7 +16,7 @@ class DecodeState
      * @var null|integer
      */
     public $_E_ = null;
-    
+
     /**
      * Object / Array
      *
@@ -30,7 +30,7 @@ class DecodeState
      * @var null|string
      */
     public $ObjectKey = null;
-    
+
     /**
      * Array key for parant object
      *
