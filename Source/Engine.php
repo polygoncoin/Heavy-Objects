@@ -1,8 +1,6 @@
 <?php
 namespace HeavyObjects\Source;
 
-use HeavyObjects\Source\State;
-
 class Engine
 {
     /**
