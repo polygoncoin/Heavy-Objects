@@ -1,9 +1,3 @@
-# Heavy-Objects
-Manage Heavy(RAM intensive) Array/Object Collections via single File in filesystem using limited RAM.
-
-## Examples
-
-```PHP
 <?php
 use HeavyObjects\Source\HeavyObject;
 
@@ -22,8 +16,7 @@ for ($i=0; $row = $stmt->fetch(PDO::FETCH_ASSOC); $i++) {
     $heavyObject->write($row, $keys = "row:{$i}");
 }
 
-// Get/Read particular records from file
+// Get/Read records from file
 $key = 10;
 $row = $heavyObject->read("row:{$key}");
 print_r($row);
-```

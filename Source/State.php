@@ -18,25 +18,11 @@ class DecodeState
     public $_E_ = null;
 
     /**
-     * Object / Array
-     *
-     * @var string
-     */
-    public $Mode = '';
-
-    /**
      * Object key for parant object
      *
      * @var null|string
      */
     public $ObjectKey = null;
-
-    /**
-     * Array key for parant object
-     *
-     * @var null|string
-     */
-    public $ArrayKey = null;
 
     /**
      * Object Values
@@ -46,21 +32,12 @@ class DecodeState
     public $ObjectValues = [];
 
     /**
-     * Array Values
-     *
-     * @var string[]
-     */
-    public $ArrayValues = [];
-
-    /**
      * Constructor
      *
      * @param string $mode Values can be one among Array
      */
-    public function __construct($mode, $objectKey = null)
+    public function __construct($objectKey = null)
     {
-        $this->Mode = $mode;
-
         $objectKey = !is_null($objectKey) ? trim($objectKey) : $objectKey;
         $this->ObjectKey = !empty($objectKey) ? $objectKey : null;
     }

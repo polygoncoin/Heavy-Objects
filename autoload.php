@@ -14,7 +14,7 @@ class Autoload
     static public function register($className)
     {
         $className = str_replace("\\", DIRECTORY_SEPARATOR, $className);
-        $file = __DIR__ . DIRECTORY_SEPARATOR . $className . '.php';
+        $file = dirname(__DIR__, 1) . DIRECTORY_SEPARATOR . $className . '.php';
         if (!file_exists($file)) {
             echo PHP_EOL . "File '{$file}' missing" . PHP_EOL;
         }
