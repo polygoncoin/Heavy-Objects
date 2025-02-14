@@ -17,7 +17,7 @@ $heavyObject->init();
 // Execute DB Query
 $stmt = $db->select($sql);
 
-// Load/Write records to file
+// Load/Write/Update records to file
 for ($i=0; $row = $stmt->fetch(PDO::FETCH_ASSOC); $i++) {
     $heavyObject->write($row, $keys = "row:{$i}");
 }
