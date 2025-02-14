@@ -56,35 +56,29 @@ class Engine
         return stream_get_contents($this->Stream, $length, $offset);
     }
 
-    /** JSON Encode */
     /**
-     * Write to temporary stream
-     *
-     * @return void
-     */
-    public function write($str)
-    {
-        $stat = fstat($this->Stream);
-        fseek($this->Stream, $stat['size'], SEEK_SET);
-        fwrite($this->Stream, $str);
-    }
-
-    /**
-     * Encodes both simple and associative array
+     * Write content
      *
      * @param array $arr
      * @return void
      */
-    public function encode($arr)
+    public function write($arr)
     {
         $str = json_encode($arr);
         $jsonLength = strlen($str);
-        
-        $this->write($this->jsonComma . $str);
+
+        // Point to EOF
+        $stat = fstat($this->Stream);
+        fseek($this->Stream, $stat['size'], SEEK_SET);
+
+        // Write content
+        fwrite($this->Stream, $this->jsonComma . $str);
+
+        // JSON Comma
         $this->jsonComma = ',';
 
+        // Return wrote content start and end positions
         $stat = fstat($this->Stream);
-
         return [$stat['size']-$jsonLength, $stat['size']-1];
     }
 }

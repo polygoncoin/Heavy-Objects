@@ -47,84 +47,12 @@ class HeavyObject
     }
 
     /**
-     * Store array details.
+     * Check if key exist
      *
-     * @param array        $array
-     * @param string|array $keys Key values seperated by colon
-     * @return integer
+     * @param string|null $keys Key values seperated by colon
+     * @return array|bool
      */
-    public function write(array $array, string|array $keys = '')
-    {
-        $return = [];
-        $keys = is_array($keys) ? $keys : (strlen($keys) === 0 ? [] : explode(':', $keys));
-        foreach ($array as $key => &$value) {
-            if ($key === '') continue;
-            if (is_array($value)) {
-                $keysArr = $keys;
-                $keysArr[] = $key;
-                $this->write($value, $keysArr);
-            } else {
-                $return[$key] = $value;
-            }
-        }
-        if (count($return) > 0) {
-            if ($readArr = $this->read(implode(':', $keys))) {
-                if ($readArr === $return) return;
-            }
-            list($_S_, $_E_) = $this->Engine->encode($return);
-            // Update index.
-            $FileIndex = &$this->FileIndex;
-            for ($i=0, $iCount = count($keys); $i < $iCount; $i++) {
-                if ($keys[$i] === '') {
-                    continue;
-                }
-                if (!isset($FileIndex[$keys[$i]])) {
-                    $FileIndex[$keys[$i]] = [
-                        '_C_' => 0
-                    ];
-                    if (ctype_digit((string)$keys[$i])) {
-                        $FileIndex['_C_']++;
-                    }
-                }
-                $FileIndex = &$FileIndex[$keys[$i]];
-            }
-            $FileIndex['_S_'] = $_S_;
-            $FileIndex['_E_'] = $_E_;
-        }
-    }
-
-    /**
-     * Count of array element
-     *
-     * @param null|string $keys Key values seperated by colon
-     * @return integer
-     */
-    public function count($keys = null)
-    {
-        $FileIndex = &$this->FileIndex;
-        if (!is_null($keys) && strlen($keys) !== 0) {
-            foreach (explode(':', $keys) as $key) {
-                if (isset($FileIndex[$key])) {
-                    $FileIndex = &$FileIndex[$key];
-                } else {
-                    die("Invalid key {$key}");
-                }
-            }
-        }
-        if (isset($FileIndex['_S_']) && isset($FileIndex['_E_'])) {
-            return count($this->get($keys));
-        }
-
-        return count($FileIndex) - 1; // minus 1 for _C_
-    }
-
-    /**
-     * Pass the keys and get whole content belonging to keys
-     *
-     * @param string $keys Key values seperated by colon
-     * @return array
-     */
-    public function read($keys = null)
+    public function isset($keys = null)
     {
         $FileIndex = &$this->FileIndex;
         if (!is_null($keys) && strlen($keys) !== 0) {
@@ -137,6 +65,41 @@ class HeavyObject
                 }
             }
         }
+
+        return $FileIndex;
+    }
+
+    /**
+     * Count of array element
+     *
+     * @param null|string $keys Key values seperated by colon
+     * @return integer
+     */
+    public function count($keys = null)
+    {
+        if (!($FileIndex = $this->isset($keys))) {
+            return false;
+        }
+
+        if (isset($FileIndex['_C_'])) {
+            return $FileIndex['_C_'];
+        }
+
+        return false;
+    }
+
+    /**
+     * Pass the keys and get whole content belonging to keys
+     *
+     * @param string $keys Key values seperated by colon
+     * @return array
+     */
+    public function read($keys = null)
+    {
+        if (!($FileIndex = $this->isset($keys))) {
+            return false;
+        }
+
         return $this->data($FileIndex);
     }
 
@@ -179,5 +142,52 @@ class HeavyObject
         }
     
         return $return;
+    }
+
+    /**
+     * Store array details.
+     *
+     * @param array        $array
+     * @param string|array $keys Key values seperated by colon
+     * @return integer
+     */
+    public function write(array $array, string|array $keys = '')
+    {
+        $return = [];
+        $keys = is_array($keys) ? $keys : (strlen($keys) === 0 ? [] : explode(':', $keys));
+        foreach ($array as $key => &$value) {
+            if ($key === '') continue;
+            if (is_array($value)) {
+                $keysArr = $keys;
+                $keysArr[] = $key;
+                $this->write($value, $keysArr);
+            } else {
+                $return[$key] = $value;
+            }
+        }
+        if (count($return) > 0) {
+            if ($readArr = $this->read(implode(':', $keys))) {
+                if ($readArr === $return) return;
+            }
+            list($_S_, $_E_) = $this->Engine->write($return);
+            // Update index.
+            $FileIndex = &$this->FileIndex;
+            for ($i=0, $iCount = count($keys); $i < $iCount; $i++) {
+                if ($keys[$i] === '') {
+                    continue;
+                }
+                if (!isset($FileIndex[$keys[$i]])) {
+                    $FileIndex[$keys[$i]] = [
+                        '_C_' => 0
+                    ];
+                    if (ctype_digit((string)$keys[$i])) {
+                        $FileIndex['_C_']++;
+                    }
+                }
+                $FileIndex = &$FileIndex[$keys[$i]];
+            }
+            $FileIndex['_S_'] = $_S_;
+            $FileIndex['_E_'] = $_E_;
+        }
     }
 }
