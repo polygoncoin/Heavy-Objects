@@ -137,7 +137,6 @@ class HeavyObject
                 }
             }
         }
-
         return $this->data($FileIndex);
     }
 
@@ -156,8 +155,7 @@ class HeavyObject
         ) {
             $this->Engine->_S_ = $FileIndex['_S_'];
             $this->Engine->_E_ = $FileIndex['_E_'];
-            $json = json_decode($this->Engine->getObjectString(), true);
-            $return = $json[key($json)];
+            $return = json_decode($this->Engine->getObjectString(), true);
         } else {
             foreach ($FileIndex as $key => &$fIndex) {
                 if ($key === '') continue;
