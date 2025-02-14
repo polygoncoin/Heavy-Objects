@@ -17,4 +17,4 @@ for ($i=0; $row = $stmt->fetch(PDO::FETCH_ASSOC); $i++) {
 // Get/Read records from file
 $key = 10;
 $row = $heavyObject->read("row:{$key}");
-print_r($row);
+echo '<pre>';print_r($row);

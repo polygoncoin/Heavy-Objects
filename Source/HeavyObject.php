@@ -71,8 +71,7 @@ class HeavyObject
             if ($readArr = $this->read(implode(':', $keys))) {
                 if ($readArr === $return) return;
             }
-            $write = [implode(':', $keys) => $return];
-            list($_S_, $_E_) = $this->Engine->encode($write);
+            list($_S_, $_E_) = $this->Engine->encode($return);
             // Update index.
             $FileIndex = &$this->FileIndex;
             for ($i=0, $iCount = count($keys); $i < $iCount; $i++) {
@@ -168,8 +167,7 @@ class HeavyObject
                 ) {
                     $this->Engine->_S_ = $fIndex['_S_'];
                     $this->Engine->_E_ = $fIndex['_E_'];
-                    $json = json_decode($this->Engine->getObjectString(), true);
-                    $return[$key] = $json[key($json)];
+                    $return[$key] = json_decode($this->Engine->getObjectString(), true);
                 } else {
                     if (is_array($fIndex)) {
                         foreach ($this->data($fIndex) as $k => $v) {
