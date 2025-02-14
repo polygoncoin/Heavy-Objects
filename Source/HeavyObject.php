@@ -43,49 +43,7 @@ class HeavyObject
     public function __construct(&$Stream)
     {
         $this->Stream = &$Stream;
-    }
-
-    /**
-     * Initialize
-     *
-     * @return boolean
-     */
-    public function init()
-    {
-        // Init Decode Engine
         $this->Engine = new Engine($this->Stream);
-        $this->indexString();
-    }
-
-    /**
-     * Index file content
-     *
-     * @return void
-     */
-    public function indexString()
-    {
-        $this->FileIndex = null;
-        foreach ($this->Engine->process(true) as $keys => $val) {
-            if (
-                isset($val['_S_']) &&
-                isset($val['_E_'])
-            ) {
-                $FileIndex = &$this->FileIndex;
-                for ($i=0, $iCount = count($keys); $i < $iCount; $i++) {
-                    if (!isset($FileIndex[$keys[$i]])) {
-                        $FileIndex[$keys[$i]] = [
-                            '_C_' => 0
-                        ];
-                    }
-                    if (ctype_digit((string)$keys[$i])) {
-                        $FileIndex['_C_']++;
-                    }
-                    $FileIndex = &$FileIndex[$keys[$i]];
-                }
-                $FileIndex['_S_'] = $val['_S_'];
-                $FileIndex['_E_'] = $val['_E_'];
-            }
-        }
     }
 
     /**

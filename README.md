@@ -9,10 +9,8 @@ use HeavyObjects\Source\HeavyObject;
 
 include_once('autoload.php');
 
-$stream = fopen("filename.txt", "wr+b");
-// $stream = fopen("php://temp", "rw+b");
+$stream = fopen("php://temp", "rw+b");
 $heavyObject = new HeavyObject($stream);
-$heavyObject->init();
 
 // Execute DB Query
 $stmt = $db->select($sql);
