@@ -138,9 +138,9 @@ class HeavyObject
                         }
                     }
                 }
-            }    
+            }
         }
-    
+
         return $return;
     }
 
