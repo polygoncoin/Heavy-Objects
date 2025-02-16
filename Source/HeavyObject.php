@@ -54,19 +54,26 @@ class HeavyObject
      */
     public function isset($keys = null)
     {
+        $data = false;
         $FileIndex = &$this->FileIndex;
         if (!is_null($keys) && strlen($keys) !== 0) {
             foreach (explode(':', $keys) as $key) {
                 if ($key === '') continue;
-                if (isset($FileIndex[$key])) {
+                if ($data === false && isset($FileIndex[$key])) {
                     $FileIndex = &$FileIndex[$key];
                 } else {
-                    return false;
+                    $data = $this->data($FileIndex);
+                    if (isset($data[$key])) {
+                        return true;
+                    } else {
+                        throw new \Exception('Invalid key');
+                    }
+                    break;
                 }
             }
         }
 
-        return $FileIndex;
+        return true;
     }
 
     /**
@@ -77,15 +84,21 @@ class HeavyObject
      */
     public function count($keys = null)
     {
-        if (!($FileIndex = $this->isset($keys))) {
-            return false;
+        $FileIndex = &$this->FileIndex;
+        if (!is_null($keys) && strlen($keys) !== 0) {
+            foreach (explode(':', $keys) as $key) {
+                if ($key === '') continue;
+                if (isset($FileIndex[$key])) {
+                    $FileIndex = &$FileIndex[$key];
+                } else {
+                    throw new \Exception('Invalid key');
+                }
+            }
         }
 
         if (isset($FileIndex['_C_'])) {
             return $FileIndex['_C_'];
         }
-
-        return false;
     }
 
     /**
@@ -96,8 +109,23 @@ class HeavyObject
      */
     public function read($keys = null)
     {
-        if (!($FileIndex = $this->isset($keys))) {
-            return false;
+        $data = false;
+        $FileIndex = &$this->FileIndex;
+        if (!is_null($keys) && strlen($keys) !== 0) {
+            foreach (explode(':', $keys) as $key) {
+                if ($key === '') continue;
+                if ($data === false && isset($FileIndex[$key])) {
+                    $FileIndex = &$FileIndex[$key];
+                } else {
+                    $data = $this->data($FileIndex);
+                    if (isset($data[$key])) {
+                        return $data[$key];
+                    } else {
+                        throw new \Exception('Invalid key');
+                    }
+                    break;
+                }
+            }
         }
 
         return $this->data($FileIndex);
@@ -112,16 +140,17 @@ class HeavyObject
     public function data(&$FileIndex)
     {
         $return = [];
-        if (
-            isset($FileIndex['_S_']) &&
-            isset($FileIndex['_E_'])
-        ) {
-            $this->Engine->_S_ = $FileIndex['_S_'];
-            $this->Engine->_E_ = $FileIndex['_E_'];
-            $return = json_decode($this->Engine->getObjectString(), true);
-        } else {
+        if (is_array($FileIndex)) {
+            if (
+                isset($FileIndex['_S_']) &&
+                isset($FileIndex['_E_'])
+            ) {
+                $this->Engine->_S_ = $FileIndex['_S_'];
+                $this->Engine->_E_ = $FileIndex['_E_'];
+                $return = json_decode($this->Engine->getObjectString(), true);
+            }
             foreach ($FileIndex as $key => &$fIndex) {
-                if ($key === '') continue;
+                if (in_array($key, ['', '_S_','_E_','_C_'])) continue;
                 if (
                     isset($fIndex['_S_']) &&
                     isset($fIndex['_E_'])
@@ -155,6 +184,7 @@ class HeavyObject
     {
         $return = [];
         $keys = is_array($keys) ? $keys : (strlen($keys) === 0 ? [] : explode(':', $keys));
+        $_C_ = 0;
         foreach ($array as $key => &$value) {
             if ($key === '') continue;
             if (is_array($value)) {
@@ -163,12 +193,17 @@ class HeavyObject
                 $this->write($value, $keysArr);
             } else {
                 $return[$key] = $value;
+                if (ctype_digit((string)$key)) {
+                    $_C_ = $key;
+                }
             }
         }
         if (count($return) > 0) {
-            if ($readArr = $this->read(implode(':', $keys))) {
-                if ($readArr === $return) return;
-            }
+            try {
+                if ($readArr = $this->read(implode(':', $keys))) {
+                    if ($readArr === $return) return;
+                }
+            } catch (\Exception $e) {}
             list($_S_, $_E_) = $this->Engine->write($return);
             // Update index.
             $FileIndex = &$this->FileIndex;
@@ -186,8 +221,9 @@ class HeavyObject
                 }
                 $FileIndex = &$FileIndex[$keys[$i]];
             }
-            $FileIndex['_S_'] = $_S_;
-            $FileIndex['_E_'] = $_E_;
+            $FileIndex['_S_'] = (int)$_S_;
+            $FileIndex['_E_'] = (int)$_E_;
+            $FileIndex['_C_'] = (int)$_C_;
         }
     }
 }
