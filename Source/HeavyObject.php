@@ -21,13 +21,6 @@ class HeavyObject
     public $FileIndex = null;
 
     /**
-     * Allowed File length
-     *
-     * @var integer
-     */
-    private $MaxFileLength = 4 * 1024 * 1024 * 1024; // 4 GB
-
-    /**
      * Private Engine
      *
      * @var null|Engine
