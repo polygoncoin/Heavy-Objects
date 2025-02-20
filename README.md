@@ -21,7 +21,7 @@ echo '<pre>';
 echo memory_get_usage(); // 11,842,144 bytes
 ```
 
-### Memory usage by 1000 HeavyBbjects each with 100 keys (~2.5 MB)
+### Memory usage by 1000 HeavyObjects each with 100 keys (~2.5 MB)
 
 ```PHP
 <?php
