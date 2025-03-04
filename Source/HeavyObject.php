@@ -1,7 +1,7 @@
 <?php
-namespace HeavyObjects\Source;
+namespace Source;
 
-use HeavyObjects\Source\Engine;
+use Source\Engine;
 
 class HeavyObject
 {

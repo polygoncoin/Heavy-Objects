@@ -1,9 +1,9 @@
 <?php
-use HeavyObjects\Source\HeavyObject;
+use Source\HeavyObject;
 
 include_once('autoload.php');
 
-$stream = fopen("php://temp", "rw+b");
+$stream = fopen("php://temp", "wr+b");
 $heavyObject = new HeavyObject($stream);
 
 // Execute DB Query

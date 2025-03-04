@@ -25,11 +25,11 @@ echo memory_get_usage(); // 11,842,144 bytes
 
 ```PHP
 <?php
-use HeavyObjects\Source\HeavyObject;
+use Source\HeavyObject;
 
 include_once('autoload.php');
 
-$stream = fopen("php://temp", "rw+b");
+$stream = fopen("php://temp", "wr+b");
 $heavyObject = new HeavyObject($stream);
 
 // Load/Write/Update records to file

@@ -1,5 +1,5 @@
 <?php
-namespace HeavyObjects\Source;
+namespace Source;
 
 class Engine
 {
