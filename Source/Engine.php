@@ -18,18 +18,25 @@ class Engine
     private $jsonComma = '';
 
     /**
-     * Object start position
+     * Object - start position
      *
      * @var null|integer
      */
     public $_S_ = null;
 
     /**
-     * Object file end position
+     * Object - end position
      *
      * @var null|integer
      */
     public $_E_ = null;
+
+    /**
+     * File end position
+     *
+     * @var null|integer
+     */
+    public $fileSize = null;
 
     /**
      * Decode constructor
@@ -40,6 +47,8 @@ class Engine
     public function __construct(&$Stream)
     {
         $this->Stream = &$Stream;
+        $stat = fstat($this->Stream);
+        $this->fileSize = $stat['size'];
     }
 
     /**
@@ -64,21 +73,22 @@ class Engine
      */
     public function write($arr)
     {
-        $str = json_encode($arr);
-        $jsonLength = strlen($str);
-
         // Point to EOF
-        $stat = fstat($this->Stream);
-        fseek($this->Stream, $stat['size'], SEEK_SET);
+        fseek($this->Stream, $this->fileSize, SEEK_SET);
 
         // Write content
-        fwrite($this->Stream, $this->jsonComma . $str);
+        $str = $this->jsonComma . json_encode($arr);
+        fwrite($this->Stream, $str);
 
-        // JSON Comma
-        $this->jsonComma = ',';
+        $jsonLength = strlen($str);
+        $this->fileSize += $jsonLength;
 
         // Return wrote content start and end positions
-        $stat = fstat($this->Stream);
-        return [$stat['size']-$jsonLength, $stat['size']-1];
+        if (empty($this->jsonComma)) {
+            $this->jsonComma = ',';
+            return [$this->fileSize - $jsonLength, $this->fileSize-1];
+        } else {
+            return [$this->fileSize - $jsonLength + 1, $this->fileSize-1];
+        }
     }
 }

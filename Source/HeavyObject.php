@@ -50,7 +50,9 @@ class HeavyObject
         $data = false;
         $FileIndex = &$this->FileIndex;
         if (!is_null($keys) && strlen($keys) !== 0) {
-            foreach (explode(':', $keys) as $key) {
+            $keysArr = explode(':', $keys);
+            for ($i = 0, $iCount = count($keysArr); $i < $iCount; $i++) {
+                $key = $keysArr[$i];
                 if ($key === '') continue;
                 if ($data === false && isset($FileIndex[$key])) {
                     $FileIndex = &$FileIndex[$key];
@@ -59,14 +61,13 @@ class HeavyObject
                     if (isset($data[$key])) {
                         return true;
                     } else {
-                        throw new \Exception('Invalid key');
+                        return false;
                     }
-                    break;
                 }
             }
         }
 
-        return true;
+        return !empty($FileIndex) ? true : false;
     }
 
     /**
@@ -218,5 +219,119 @@ class HeavyObject
             $FileIndex['_E_'] = (int)$_E_;
             $FileIndex['_C_'] = (int)$_C_;
         }
+    }
+
+    /**
+     * Move array from source to dest
+     *
+     * @param string $srcKey  Source Key values seperated by colon
+     * @param string $destKey Source Key values seperated by colon
+     * @return boolean
+     */
+    public function move($srcKey, $destKey)
+    {
+        if ($this->isset($srcKey)) {
+            $destKeys = explode(':', $destKey);
+            $destFileIndex = &$this->FileIndex;
+            for ($i=0, $iCount = count($destKeys); $i < $iCount; $i++) {
+                if ($destKeys[$i] === '') {
+                    continue;
+                }
+                if ($destKeys[$i] === '_C_') {
+                    $destKeys[$i] = $destFileIndex['_C_'];
+                }
+                if (!isset($destFileIndex[$destKeys[$i]])) {
+                    $destFileIndex[$destKeys[$i]] = [
+                        '_C_' => 0
+                    ];
+                    if (ctype_digit((string)$destKeys[$i])) {
+                        $destFileIndex['_C_']++;
+                        
+                    }
+                }
+                $destFileIndex = &$destFileIndex[$destKeys[$i]];
+            }
+            if (ctype_digit((string)$destKeys[--$i]) && $i !== 
+            ($iCount-1)) {
+                $destFileIndex['_C_']++;
+            }
+            if (isset($destFileIndex['_C_'])) {
+                $_C_ = $destFileIndex['_C_'];
+            }
+
+            $srcKeys = explode(':', $srcKey);
+            $srcIndex = '';
+            for ($i=0, $iCount = count($srcKeys); $i < $iCount; $i++) {
+                if ($srcKeys[$i] === '') {
+                    continue;
+                }
+                $srcIndex .= '[\''.$srcKeys[$i].'\']';
+            }
+            eval('$destFileIndex = $this->FileIndex'.$srcIndex.';');
+            if (isset($_C_)) {
+                $destFileIndex['_C_'] = $_C_;
+            }
+            eval('unset($this->FileIndex'.$srcIndex.');');
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Copy array from source to dest
+     *
+     * @param string $srcKey  Source Key values seperated by colon
+     * @param string $destKey Source Key values seperated by colon
+     * @return boolean
+     */
+    public function copy($srcKey, $destKey)
+    {
+        if ($this->isset($srcKey)) {
+            $destKeys = explode(':', $destKey);
+            $destFileIndex = &$this->FileIndex;
+            for ($i=0, $iCount = count($destKeys); $i < $iCount; $i++) {
+                if ($destKeys[$i] === '') {
+                    continue;
+                }
+                if ($destKeys[$i] === '_C_') {
+                    $destKeys[$i] = $destFileIndex['_C_'];
+                }
+                if (!isset($destFileIndex[$destKeys[$i]])) {
+                    $destFileIndex[$destKeys[$i]] = [
+                        '_C_' => 0
+                    ];
+                    if (ctype_digit((string)$destKeys[$i])) {
+                        $destFileIndex['_C_']++;
+                        
+                    }
+                }
+                $destFileIndex = &$destFileIndex[$destKeys[$i]];
+            }
+            if (ctype_digit((string)$destKeys[--$i]) && $i !== ($iCount-1)) {
+                $destFileIndex['_C_']++;
+            }
+            if (isset($destFileIndex['_C_'])) {
+                $_C_ = $destFileIndex['_C_'];
+            }
+
+            $srcKeys = explode(':', $srcKey);
+            $srcFileIndex = &$this->FileIndex;
+            for ($i=0, $iCount = count($srcKeys); $i < $iCount; $i++) {
+                if ($srcKeys[$i] === '') {
+                    continue;
+                }
+                $srcFileIndex = &$srcFileIndex[$srcKeys[$i]];
+            }
+            $destFileIndex = $srcFileIndex;
+            if (isset($_C_)) {
+                $destFileIndex['_C_'] = $_C_;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 }
