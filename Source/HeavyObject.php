@@ -246,12 +246,12 @@ class HeavyObject
                     ];
                     if (ctype_digit((string)$destKeys[$i])) {
                         $destFileIndex['_C_']++;
-                        
+
                     }
                 }
                 $destFileIndex = &$destFileIndex[$destKeys[$i]];
             }
-            if (ctype_digit((string)$destKeys[--$i]) && $i !== 
+            if (ctype_digit((string)$destKeys[--$i]) && $i !==
             ($iCount-1)) {
                 $destFileIndex['_C_']++;
             }
@@ -304,7 +304,7 @@ class HeavyObject
                     ];
                     if (ctype_digit((string)$destKeys[$i])) {
                         $destFileIndex['_C_']++;
-                        
+
                     }
                 }
                 $destFileIndex = &$destFileIndex[$destKeys[$i]];
