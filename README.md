@@ -25,12 +25,12 @@ echo memory_get_usage(); // 11,842,144 bytes
 
 ```PHP
 <?php
-use Source\HeavyObject;
+require_once __DIR__ . '/Autoload.php';
 
-include_once('autoload.php');
+use HeavyObjects\HeavyObject;
 
-$stream = fopen("php://temp", "wr+b");
-$heavyObject = new HeavyObject($stream);
+$stream = fopen(filename: "php://temp", mode: "wr+b");
+$heavyObject = new HeavyObject(stream: $stream);
 
 // Load/Write/Update records to file
 for ($i=0; $i<1000; $i++) {
@@ -49,12 +49,12 @@ echo memory_get_usage(); // 2,659,224 bytes
 
 ```PHP
 <?php
-use Source\HeavyObject;
+require_once __DIR__ . '/Autoload.php';
 
-include_once('autoload.php');
+use HeavyObjects\HeavyObject;
 
-$stream = fopen("php://temp", "wr+b");
-$heavyObject = new HeavyObject($stream);
+$stream = fopen(filename: "php://temp", mode: "wr+b");
+$heavyObject = new HeavyObject(stream: $stream);
 
 // Load/Write/Update records to file
 for ($i=0; $i<5; $i++) {
@@ -74,12 +74,12 @@ $heavyObject->copy('row:0','row1:keys:_C_'); // row1:_C_ represents $index['row1
 
 ```PHP
 <?php
-use Source\HeavyObject;
+require_once __DIR__ . '/Autoload.php';
 
-include_once('autoload.php');
+use HeavyObjects\HeavyObject;
 
-$stream = fopen("php://temp", "wr+b");
-$heavyObject = new HeavyObject($stream);
+$stream = fopen(filename: "php://temp", mode: "wr+b");
+$heavyObject = new HeavyObject(stream: $stream);
 
 // Load/Write/Update records to file
 for ($i=0; $i<5; $i++) {
