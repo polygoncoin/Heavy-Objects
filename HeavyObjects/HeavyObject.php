@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Heavy Objects
  * php version 7
@@ -11,6 +12,7 @@
  * @link      https://github.com/polygoncoin/Heavy-Objects
  * @since     Class available since Release 1.0.0
  */
+
 namespace HeavyObjects;
 
 use HeavyObjects\Engine;
@@ -49,7 +51,7 @@ class HeavyObject
      *
      * @var null|Engine
      */
-    private $_engine = null;
+    private $engine = null;
 
     /**
      * Decode constructor
@@ -59,7 +61,7 @@ class HeavyObject
     public function __construct(&$stream)
     {
         $this->stream = &$stream;
-        $this->_engine = new Engine(stream: $this->stream);
+        $this->engine = new Engine(stream: $this->stream);
     }
 
     /**
@@ -73,7 +75,10 @@ class HeavyObject
     {
         $data = false;
         $fileIndex = &$this->fileIndex;
-        if (!is_null(value: $keys) && strlen(string: $keys) !== 0) {
+        if (
+            !is_null(value: $keys)
+            && strlen(string: $keys) !== 0
+        ) {
             $keysArr = explode(separator: ':', string: $keys);
             for ($i = 0, $iCount = count(value: $keysArr); $i < $iCount; $i++) {
                 $key = $keysArr[$i];
@@ -100,7 +105,7 @@ class HeavyObject
      * Count of array element
      *
      * @param null|string $keys Key values separated by colon
-     * 
+     *
      * @return mixed
      * @throws \Exception
      */
@@ -131,7 +136,7 @@ class HeavyObject
      * Pass the keys and get whole content belonging to keys
      *
      * @param string $keys Key values separated by colon
-     * 
+     *
      * @return mixed
      * @throws \Exception
      */
@@ -151,7 +156,7 @@ class HeavyObject
                     if (isset($data[$key])) {
                         return $data[$key];
                     } else {
-                        throw new \Exception(message: 'Invalid key');
+                        return false;
                     }
                 }
             }
@@ -171,13 +176,14 @@ class HeavyObject
     {
         $return = [];
         if (is_array(value: $fileIndex)) {
-            if (isset($fileIndex['_S_']) 
+            if (
+                isset($fileIndex['_S_'])
                 && isset($fileIndex['_E_'])
             ) {
-                $this->_engine->_S_ = $fileIndex['_S_'];
-                $this->_engine->_E_ = $fileIndex['_E_'];
+                $this->engine->startIndex = $fileIndex['_S_'];
+                $this->engine->endIndex = $fileIndex['_E_'];
                 $return = json_decode(
-                    json: $this->_engine->getObjectString(), 
+                    json: $this->engine->getObjectString(),
                     associative: true
                 );
             }
@@ -185,13 +191,14 @@ class HeavyObject
                 if (in_array(needle: $key, haystack: ['', '_S_','_E_','_C_'])) {
                     continue;
                 }
-                if (isset($fIndex['_S_']) 
+                if (
+                    isset($fIndex['_S_'])
                     && isset($fIndex['_E_'])
                 ) {
-                    $this->_engine->_S_ = $fIndex['_S_'];
-                    $this->_engine->_E_ = $fIndex['_E_'];
+                    $this->engine->startIndex = $fIndex['_S_'];
+                    $this->engine->endIndex = $fIndex['_E_'];
                     $return[$key] = json_decode(
-                        json: $this->_engine->getObjectString(), 
+                        json: $this->engine->getObjectString(),
                         associative: true
                     );
                 } else {
@@ -214,7 +221,7 @@ class HeavyObject
      *
      * @param array        $array Data
      * @param string|array $keys  Key values separated by colon
-     * 
+     *
      * @return void
      */
     public function write(array $array, string|array $keys = ''): void
@@ -224,7 +231,7 @@ class HeavyObject
             $keys : (
                 strlen(string: $keys) === 0 ?
                 [] : explode(
-                    separator: ':', 
+                    separator: ':',
                     string: $keys
                 )
         );
@@ -245,21 +252,22 @@ class HeavyObject
             }
         }
         if (count(value: $return) > 0) {
-            if ($readArr = $this->read(
-                keys: implode(
-                    separator: ':', 
-                    array: $keys
+            if (
+                $readArr = $this->read(
+                    keys: implode(
+                        separator: ':',
+                        array: $keys
+                    )
                 )
-            )
             ) {
                 if ($readArr === $return) {
                     return;
                 }
             }
-            [$startIndex, $endIndex] = $this->_engine->write(arr: $return);
+            [$startIndex, $endIndex] = $this->engine->write(arr: $return);
             // Update index.
             $fileIndex = &$this->fileIndex;
-            for ($i=0, $iCount = count(value: $keys); $i < $iCount; $i++) {
+            for ($i = 0, $iCount = count(value: $keys); $i < $iCount; $i++) {
                 if ($keys[$i] === '') {
                     continue;
                 }
@@ -284,7 +292,7 @@ class HeavyObject
      *
      * @param string $srcKey  Source Key values separated by colon
      * @param string $destKey Source Key values separated by colon
-     * 
+     *
      * @return bool
      */
     public function move($srcKey, $destKey): bool
@@ -292,7 +300,7 @@ class HeavyObject
         if ($this->isset(keys: $srcKey)) {
             $destKeys = explode(separator: ':', string: $destKey);
             $destFileIndex = &$this->fileIndex;
-            for ($i=0, $iCount = count(value: $destKeys); $i < $iCount; $i++) {
+            for ($i = 0, $iCount = count(value: $destKeys); $i < $iCount; $i++) {
                 if ($destKeys[$i] === '') {
                     continue;
                 }
@@ -305,13 +313,13 @@ class HeavyObject
                     ];
                     if (ctype_digit(text: (string)$destKeys[$i])) {
                         $destFileIndex['_C_']++;
-
                     }
                 }
                 $destFileIndex = &$destFileIndex[$destKeys[$i]];
             }
-            if (ctype_digit(text: (string)$destKeys[--$i]) 
-                && $i !== ($iCount-1)
+            if (
+                ctype_digit(text: (string)$destKeys[--$i])
+                && $i !== ($iCount - 1)
             ) {
                 $destFileIndex['_C_']++;
             }
@@ -321,17 +329,17 @@ class HeavyObject
 
             $srcKeys = explode(separator: ':', string: $srcKey);
             $srcIndex = '';
-            for ($i=0, $iCount = count(value: $srcKeys); $i < $iCount; $i++) {
+            for ($i = 0, $iCount = count(value: $srcKeys); $i < $iCount; $i++) {
                 if ($srcKeys[$i] === '') {
                     continue;
                 }
-                $srcIndex .= '[\''.$srcKeys[$i].'\']';
+                $srcIndex .= '[\'' . $srcKeys[$i] . '\']';
             }
-            eval('$destFileIndex = $this->fileIndex'.$srcIndex.';');
+            eval('$destFileIndex = $this->fileIndex' . $srcIndex . ';');
             if (isset($countObjects)) {
                 $destFileIndex['_C_'] = $countObjects;
             }
-            eval('unset($this->fileIndex'.$srcIndex.');');
+            eval('unset($this->fileIndex' . $srcIndex . ');');
 
             return true;
         }
@@ -344,7 +352,7 @@ class HeavyObject
      *
      * @param string $srcKey  Source Key values separated by colon
      * @param string $destKey Source Key values separated by colon
-     * 
+     *
      * @return bool
      */
     public function copy($srcKey, $destKey): bool
@@ -352,7 +360,7 @@ class HeavyObject
         if ($this->isset(keys: $srcKey)) {
             $destKeys = explode(separator: ':', string: $destKey);
             $destFileIndex = &$this->fileIndex;
-            for ($i=0, $iCount = count(value: $destKeys); $i < $iCount; $i++) {
+            for ($i = 0, $iCount = count(value: $destKeys); $i < $iCount; $i++) {
                 if ($destKeys[$i] === '') {
                     continue;
                 }
@@ -365,12 +373,14 @@ class HeavyObject
                     ];
                     if (ctype_digit(text: (string)$destKeys[$i])) {
                         $destFileIndex['_C_']++;
-
                     }
                 }
                 $destFileIndex = &$destFileIndex[$destKeys[$i]];
             }
-            if (ctype_digit(text: (string)$destKeys[--$i]) && $i !== ($iCount-1)) {
+            if (
+                ctype_digit(text: (string)$destKeys[--$i])
+                && ($i !== ($iCount - 1))
+            ) {
                 $destFileIndex['_C_']++;
             }
             if (isset($destFileIndex['_C_'])) {
@@ -379,7 +389,7 @@ class HeavyObject
 
             $srcKeys = explode(separator: ':', string: $srcKey);
             $srcFileIndex = &$this->fileIndex;
-            for ($i=0, $iCount = count(value: $srcKeys); $i < $iCount; $i++) {
+            for ($i = 0, $iCount = count(value: $srcKeys); $i < $iCount; $i++) {
                 if ($srcKeys[$i] === '') {
                     continue;
                 }

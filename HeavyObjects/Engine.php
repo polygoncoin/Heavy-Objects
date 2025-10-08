@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Heavy Objects
  * php version 7
@@ -11,6 +12,7 @@
  * @link      https://github.com/polygoncoin/Heavy-Objects
  * @since     Class available since Release 1.0.0
  */
+
 namespace HeavyObjects;
 
 /**
@@ -32,14 +34,14 @@ class Engine
      *
      * @var null|resource
      */
-    private $_stream = null;
+    private $stream = null;
 
     /**
      * Comma
      *
      * @var string
      */
-    private $_jsonComma = '';
+    private $jsonComma = '';
 
     /**
      * Object - Start index
@@ -69,8 +71,8 @@ class Engine
      */
     public function __construct(&$stream)
     {
-        $this->_stream = &$stream;
-        $stat = fstat(stream: $this->_stream);
+        $this->stream = &$stream;
+        $stat = fstat(stream: $this->stream);
         $this->fileSize = $stat['size'];
     }
 
@@ -85,8 +87,8 @@ class Engine
         $length = $this->endIndex - $offset + 1;
 
         return stream_get_contents(
-            stream: $this->_stream, 
-            length: $length, 
+            stream: $this->stream,
+            length: $length,
             offset: $offset
         );
     }
@@ -95,27 +97,27 @@ class Engine
      * Write content
      *
      * @param array $arr Array data
-     * 
+     *
      * @return array
      */
     public function write($arr): array
     {
         // Point to EOF
-        fseek(stream: $this->_stream, offset: $this->fileSize, whence: SEEK_SET);
+        fseek(stream: $this->stream, offset: $this->fileSize, whence: SEEK_SET);
 
         // Write content
-        $str = $this->_jsonComma . json_encode(value: $arr);
-        fwrite(stream: $this->_stream, data: $str);
+        $str = $this->jsonComma . json_encode(value: $arr);
+        fwrite(stream: $this->stream, data: $str);
 
         $jsonLength = strlen(string: $str);
         $this->fileSize += $jsonLength;
 
         // Return wrote content start and end positions
-        if (empty($this->_jsonComma)) {
-            $this->_jsonComma = ',';
-            return [$this->fileSize - $jsonLength, $this->fileSize-1];
+        if (empty($this->jsonComma)) {
+            $this->jsonComma = ',';
+            return [$this->fileSize - $jsonLength, $this->fileSize - 1];
         } else {
-            return [$this->fileSize - $jsonLength + 1, $this->fileSize-1];
+            return [$this->fileSize - $jsonLength + 1, $this->fileSize - 1];
         }
     }
 }

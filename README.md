@@ -9,7 +9,7 @@ Manage Heavy(RAM intensive) Array/Object Collections via single File in filesyst
 <?php
 $rows = [];
 
-for ($i=0; $i<1000; $i++) {
+for ($i = 0; $i<1000; $i++) {
     $row = [];
     for($j=0;$j<100;$j++) {
         $row["Key{$j}"] = rand();
@@ -25,7 +25,8 @@ echo memory_get_usage(); // 11,842,144 bytes
 
 ```PHP
 <?php
-require_once __DIR__ . '/Autoload.php';
+
+require_once __DIR__ . '/AutoloadHeavyObjects.php';
 
 use HeavyObjects\HeavyObject;
 
@@ -33,7 +34,7 @@ $stream = fopen(filename: "php://temp", mode: "wr+b");
 $heavyObject = new HeavyObject(stream: $stream);
 
 // Load/Write/Update records to file
-for ($i=0; $i<1000; $i++) {
+for ($i = 0; $i<1000; $i++) {
     $row = [];
     for($j=0;$j<100;$j++) {
         $row["Key{$j}"] = rand();
@@ -49,7 +50,8 @@ echo memory_get_usage(); // 2,659,224 bytes
 
 ```PHP
 <?php
-require_once __DIR__ . '/Autoload.php';
+
+require_once __DIR__ . '/AutoloadHeavyObjects.php';
 
 use HeavyObjects\HeavyObject;
 
@@ -57,7 +59,7 @@ $stream = fopen(filename: "php://temp", mode: "wr+b");
 $heavyObject = new HeavyObject(stream: $stream);
 
 // Load/Write/Update records to file
-for ($i=0; $i<5; $i++) {
+for ($i = 0; $i<5; $i++) {
     $row = [];
     for($j=0;$j<100;$j++) {
         $row["Key{$j}"] = rand();
@@ -74,7 +76,8 @@ $heavyObject->copy('row:0','row1:keys:_C_'); // row1:_C_ represents $index['row1
 
 ```PHP
 <?php
-require_once __DIR__ . '/Autoload.php';
+
+require_once __DIR__ . '/AutoloadHeavyObjects.php';
 
 use HeavyObjects\HeavyObject;
 
@@ -82,7 +85,7 @@ $stream = fopen(filename: "php://temp", mode: "wr+b");
 $heavyObject = new HeavyObject(stream: $stream);
 
 // Load/Write/Update records to file
-for ($i=0; $i<5; $i++) {
+for ($i = 0; $i<5; $i++) {
     $row = [];
     for($j=0;$j<100;$j++) {
         $row["Key{$j}"] = rand();

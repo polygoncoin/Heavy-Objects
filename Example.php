@@ -1,22 +1,33 @@
 <?php
-require_once __DIR__ . '/Autoload.php'; // phpcs:ignore
+
+require_once __DIR__ . '/AutoloadHeavyObjects.php'; // phpcs:ignore
 
 use HeavyObjects\HeavyObject;
+
+echo '<pre>';
 
 $stream = fopen(filename: "php://temp", mode: "wr+b");
 $heavyObject = new HeavyObject(stream: $stream);
 
-// Execute DB Query
-$stmt = $db->select($sql);
-
 // Load/Write/Update records to file
-for ($i=0; $row = $stmt->fetch(PDO::FETCH_ASSOC); $i++) {
-    $heavyObject->write(array: $row, keys: $keys = "row:{$i}");
+for ($i = 0; $i < 100; $i++) {
+    $row = [];
+    for ($j = 0; $j < 100; $j++) {
+        $row["Key{$j}"] = rand();
+    }
+    $heavyObject->write($row, $keys = "row:{$i}");
 }
 
-// Get/Read records from file
-$key = 10;
-$row = $heavyObject->read(keys: "row:{$key}");
-echo '<pre>';
-echo 'row:'; print_r(value: $row);
-echo 'Count:' . $heavyObject->count(keys: 'row');
+echo nl2br(PHP_EOL . memory_get_usage()) . ' Bytes';
+
+$rows = [];
+
+for ($i = 0; $i < 100; $i++) {
+    $row = [];
+    for ($j = 0; $j < 100; $j++) {
+        $row["Key{$j}"] = rand();
+    }
+    $rows[] = $row;
+}
+
+echo nl2br(PHP_EOL . memory_get_usage()) . ' Bytes';
