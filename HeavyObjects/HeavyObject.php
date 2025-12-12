@@ -54,7 +54,7 @@ class HeavyObject
     private $engine = null;
 
     /**
-     * Decode constructor
+     * Constructor
      *
      * @param resource $stream File Stream
      */

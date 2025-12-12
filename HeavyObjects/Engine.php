@@ -65,7 +65,7 @@ class Engine
     public $fileSize = null;
 
     /**
-     * Decode constructor
+     * Constructor
      *
      * @param resource $stream File stream
      */
